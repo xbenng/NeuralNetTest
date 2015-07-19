@@ -11,9 +11,10 @@ public class NeuronNet {
     private static ArrayList<Neuron> outputNeurons;
     private static ArrayList<float[]> trainingInput = new ArrayList<>();
     private static ArrayList<float[]> trainingOutput = new ArrayList<>();
+    private static ArrayList<float[]> inputData = new ArrayList<>();
     private static double sumError;
 
-    public static double LEARN_RATE = .9;
+    public static double LEARN_RATE = .8;
     public static double ERROR_TOLERANCE = .01;
 
     private static Random rand = new Random(System.currentTimeMillis());
@@ -23,8 +24,18 @@ public class NeuronNet {
 
         initLayout(args[0]);
 
-        initTrainingData();
+        initTrainingData(args[1]);
 
+        train();
+
+        printResults();
+
+
+        return;
+    }
+
+    public static void train()
+    {
         do {
 
             sumError = 0;
@@ -65,18 +76,6 @@ public class NeuronNet {
             //System.out.println(sumError);
 
         } while (sumError > ERROR_TOLERANCE) ; //until error acceptable
-
-
-        inputNeurons.get(0).setInput(1);
-        inputNeurons.get(1).setInput(1);
-        inputNeurons.get(2).setInput(1);
-
-        for (Neuron outputNeuron : outputNeurons) {
-            System.out.println("Result: " + outputNeuron.getOutput());
-        }
-
-
-        return;
     }
 
     public static void initLayout(String layoutFileAddress)
@@ -132,12 +131,73 @@ public class NeuronNet {
 
     }
 
-    public static void initTrainingData()
+    public static void printResults()
     {
-        trainingInput.add(new float[]{(float) 1, (float) 1, (float) 1});
-        trainingOutput.add(new float[] {0, 1});
-        trainingInput.add(new float[]{(float) 0, (float) 0, (float) 0});
-        trainingOutput.add(new float[] {1, 0});
+        for (int i = 0; i < inputData.size(); i++) {
+
+            //set inputs
+            float[] in = inputData.get(i);
+            System.out.print("Input: ");
+            for (int j = 0; j < in.length; j++) {
+                inputNeurons.get(j).setInput(in[j]);
+                System.out.print(in[j] + ", ");
+            }
+            System.out.println();
+            System.out.print("Output: ");
+            for (int j = 0; j < outputNeurons.size(); j++) {
+                System.out.print(outputNeurons.get(j).getOutput() + ", ");
+            }
+            System.out.println();
+        }
+    }
+
+    public static void initTrainingData(String traningFileAddress)
+    {
+        BufferedReader dataReader;
+        String line;
+
+        try {
+            dataReader = new BufferedReader(new FileReader(new File(traningFileAddress)));
+            while ((line = dataReader.readLine()) != null) {
+                if (line.contains("?"))
+                {
+                    line = line.substring(line.indexOf("?") + 1);
+                    String[] input = line.split(",");
+                    float[] inputFloats = new float[input.length];
+                    for (int i = 0; i < input.length; i++)
+                    {
+                        inputFloats[i] = Float.valueOf(input[i]);
+                    }
+                    inputData.add(inputFloats);
+
+                }
+                else
+                {
+                    String[] data = line.split(" ");
+                    String[] input = data[0].split(",");
+                    String[] output = data[1].split(",");
+                    float[] inputFloats = new float[input.length];
+                    float[] outputFloats = new float[output.length];
+
+                    for (int i = 0; i < input.length; i++)
+                    {
+                        inputFloats[i] = Float.valueOf(input[i]);
+                    }
+
+                    for (int i = 0; i < output.length; i++)
+                    {
+                        outputFloats[i] = Float.valueOf(output[i]);
+                    }
+                    trainingInput.add(inputFloats);
+                    trainingOutput.add(outputFloats);
+                }
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
 
