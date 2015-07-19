@@ -1,3 +1,4 @@
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -6,14 +7,13 @@ import java.util.Random;
  */
 public class NeuronNet {
     private static ArrayList<ArrayList<Neuron>>  neuronLayers = new ArrayList<>();
-    private static ArrayList<Neuron> inputNeurons = new ArrayList<>();
-    private static ArrayList<Neuron> hiddenNeurons = new ArrayList<>();
-    private static ArrayList<Neuron> outputNeurons = new ArrayList<>();
+    private static ArrayList<Neuron> inputNeurons;
+    private static ArrayList<Neuron> outputNeurons;
     private static ArrayList<float[]> trainingInput = new ArrayList<>();
     private static ArrayList<float[]> trainingOutput = new ArrayList<>();
     private static double sumError;
 
-    public static double LEARN_RATE = .4;
+    public static double LEARN_RATE = .9;
     public static double ERROR_TOLERANCE = .01;
 
     private static Random rand = new Random(System.currentTimeMillis());
@@ -21,23 +21,9 @@ public class NeuronNet {
     public static void main(String args[])
     {
 
-        for (int i = 0; i < 3; i++) inputNeurons.add(new Neuron(Neuron.INPUT));
-        for (int i = 0; i < 3; i++) hiddenNeurons.add(new Neuron(Neuron.HIDDEN));
-        for (int i = 0; i < 2; i++) outputNeurons.add(new Neuron(Neuron.OUTPUT));
-
-        neuronLayers.add(inputNeurons);
-        neuronLayers.add(hiddenNeurons);
-        neuronLayers.add(outputNeurons);
-
-
-        for (int i = 0; i < neuronLayers.size() - 1; i++)
-        {
-            connectLayers(neuronLayers.get(i), neuronLayers.get(i + 1));
-        }
+        initLayout(args[0]);
 
         initTrainingData();
-
-
 
         do {
 
@@ -81,8 +67,8 @@ public class NeuronNet {
         } while (sumError > ERROR_TOLERANCE) ; //until error acceptable
 
 
-        inputNeurons.get(0).setInput(0);
-        inputNeurons.get(1).setInput(0);
+        inputNeurons.get(0).setInput(1);
+        inputNeurons.get(1).setInput(1);
         inputNeurons.get(2).setInput(1);
 
         for (Neuron outputNeuron : outputNeurons) {
@@ -93,11 +79,64 @@ public class NeuronNet {
         return;
     }
 
+    public static void initLayout(String layoutFileAddress)
+    {
+
+        BufferedReader layoutReader;
+        String line;
+        ArrayList<Integer> layerSizes = new ArrayList<>();
+
+        try {
+            layoutReader = new BufferedReader(new FileReader(new File(layoutFileAddress)));
+            while ((line = layoutReader.readLine()) != null) {
+                layerSizes.add(Integer.parseInt(line));  //read whole layout file
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        //for each line
+        for (int i = 0; i < layerSizes.size(); i++)
+        {
+            short layerType;
+            if (i == 0)
+            {
+                layerType = Neuron.INPUT;
+            }
+            else if (i == layerSizes.size() - 1)
+            {
+                layerType = Neuron.OUTPUT;
+            }
+            else
+            {
+                layerType = Neuron.HIDDEN;
+            }
+            //init layer
+            ArrayList<Neuron> newLayer = new ArrayList<>();
+            for (int j = 0; j < layerSizes.get(i); j++) newLayer.add(new Neuron(layerType));
+            if (i != layerSizes.size() - 1) newLayer.add(new Neuron(Neuron.BIAS));  //add bias neuron to layer
+            //add layer
+            neuronLayers.add(newLayer);
+
+        }
+        //connect layers
+        for (int i = 0; i < neuronLayers.size() - 1; i++)
+        {
+            connectLayers(neuronLayers.get(i), neuronLayers.get(i + 1));
+        }
+
+        inputNeurons = neuronLayers.get(0);
+        outputNeurons = neuronLayers.get(neuronLayers.size() - 1);
+
+
+    }
+
     public static void initTrainingData()
     {
         trainingInput.add(new float[]{(float) 1, (float) 1, (float) 1});
         trainingOutput.add(new float[] {0, 1});
-        trainingInput.add(new float[]{(float) .01, (float) .01, (float) .01});
+        trainingInput.add(new float[]{(float) 0, (float) 0, (float) 0});
         trainingOutput.add(new float[] {1, 0});
     }
 

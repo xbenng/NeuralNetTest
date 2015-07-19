@@ -51,23 +51,28 @@ public class Neuron {
     }
 
 
-    private void computeOutput()
+    public float getOutput()
     {
-        if (Neuron.INPUT != neuronType)
-        {
-            for (int i = 0; i < inputNeurons.size(); i++) {
-                input += inputNeurons.get(i).getOutput() * inputWeights.get(i);  //todo needs to be reset
-            }
-            output = 1 / (float) (1 + Math.pow(Math.E, -input));  //sigmoid activation
-
-            input = 0;
-        }
-        else
+        if (neuronType == Neuron.INPUT)
         {
             output = 1 / (float) (1 + Math.pow(Math.E, -inputInput));  //sigmoid activation
         }
+        else if (neuronType == Neuron.BIAS)
+        {
+                        output = 1 / (float) (1 + Math.pow(Math.E, -inputInput));  //sigmoid activation
+             //output = 1;
+        }
+        else
+        {
+            input = 0; // reset inputs
+            //sum inputs
+            for (int i = 0; i < inputNeurons.size(); i++) {
+                input += inputNeurons.get(i).getOutput() * inputWeights.get(i);
+            }
+            output = 1 / (float) (1 + Math.pow(Math.E, -input));  //sigmoid activation
 
-
+        }
+        return output;
     }
 
     public float getError()
@@ -104,11 +109,6 @@ public class Neuron {
         //deltaComputed = false;
     }
 
-    public float getOutput()
-    {
-        computeOutput();
-        return output;
-    }
 
     public float getWeight(Neuron n)
     {
